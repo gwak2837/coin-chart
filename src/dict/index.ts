@@ -4,8 +4,8 @@ import { type Locale } from '@/middleware'
 import 'server-only'
 
 const dictionaries = {
-  ko: async () => await import('../../../src/dict/ko.json').then((module) => module.default),
-  en: async () => await import('../../../src/dict/en.json').then((module) => module.default),
+  ko: async () => await import('./ko.json').then((module) => module.default),
+  en: async () => await import('./en.json').then((module) => module.default),
 }
 
 export async function getDict(locale: Locale) {

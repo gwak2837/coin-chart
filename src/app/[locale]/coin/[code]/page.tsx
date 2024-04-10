@@ -1,5 +1,5 @@
 import Chart from '@/app/[locale]/coin/[code]/Chart'
-import { getDict } from '@/app/[locale]/dict'
+import { getDict } from '@/dict'
 import { type PageProps } from '@/common/types'
 
 type Params = {
