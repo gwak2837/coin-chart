@@ -26,7 +26,7 @@ export interface WebSocketResponse {
   lowest_52_week_date: string
   market_state: string
   is_trading_suspended: boolean
-  delisting_date: any
+  delisting_date: string
   market_warning: string
   timestamp: number
   acc_trade_price_24h: number

@@ -1,13 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+
+import { type WebSocketResponse } from '@/types/upbit'
 
 interface Props {
   coinCode: string
 }
 
 export default function Chart({ coinCode }: Props) {
-  const [ticker, setTicker] = useState(null)
+  const [ticker, setTicker] = useState<WebSocketResponse>()
   const webSocketRef = useRef<WebSocket>()
 
   useEffect(() => {
@@ -27,11 +29,11 @@ export default function Chart({ coinCode }: Props) {
       if (event.data instanceof Blob) {
         const reader = new FileReader()
         reader.onload = () => {
-          setTicker(JSON.parse(reader.result as string))
+          setTicker(JSON.parse(reader.result as string) as WebSocketResponse)
         }
         reader.readAsText(event.data)
       } else {
-        setTicker(JSON.parse(event.data))
+        setTicker(JSON.parse(event.data as string) as WebSocketResponse)
       }
     }
 
