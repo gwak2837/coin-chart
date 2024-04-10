@@ -24,9 +24,3 @@ export type ErrorProps = {
 export type RouteProps = {
   params: Record<string, string>
 }
-
-export type Params = {
-  lang: 'ko' | 'en'
-  postId: string
-  questionCount: string
-}

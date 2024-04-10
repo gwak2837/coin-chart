@@ -1,5 +1,4 @@
 import { type Metadata } from 'next'
-import { type ReactNode } from 'react'
 
 import {
   APPLICATION_NAME,
@@ -7,9 +6,9 @@ import {
   CANONICAL_URL,
   APPLICATION_SHORT_NAME,
 } from '@/common/constants'
-import { type PageProps } from '@/common/types'
+import { type LayoutProps } from '@/common/types'
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export function generateMetadata({ params }: LayoutProps): Metadata {
   return {
     openGraph: {
       title: APPLICATION_NAME,
@@ -23,10 +22,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-interface Props {
-  children: ReactNode
-}
-
-export default function Layout({ children }: Props) {
+export default function Layout({ children }: LayoutProps) {
   return <>{children}</>
 }
