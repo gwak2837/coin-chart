@@ -16,6 +16,7 @@ import {
 } from '@/common/constants'
 import { type LayoutProps } from '@/common/types'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import ReactHotToast from '@/components/ReactHotToast'
 
 import './globals.css'
 
@@ -100,6 +101,7 @@ export default function RootLayout({ children, params }: Readonly<LayoutProps>) 
       <body className={myFont.className}>
         {children}
         <div id="modal-root" />
+        <ReactHotToast />
         <SpeedInsights />
       </body>
       <Analytics />

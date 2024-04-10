@@ -1,4 +1,4 @@
-export interface WebSocketResponse {
+export interface UpbitSocketResponse {
   type: string
   code: string
   opening_price: number
@@ -32,4 +32,40 @@ export interface WebSocketResponse {
   acc_trade_price_24h: number
   acc_trade_volume_24h: number
   stream_type: string
+}
+
+export interface UpbitSocketSimpleResponse {
+  ty: string
+  cd: string
+  op: number
+  hp: number
+  lp: number
+  tp: number
+  pcp: number
+  atp: number
+  c: string
+  cp: number
+  scp: number
+  cr: number
+  scr: number
+  ab: string
+  tv: number
+  atv: number
+  tdt: string
+  ttm: string
+  ttms: number
+  aav: number
+  abv: number
+  h52wp: number
+  h52wdt: string
+  l52wp: number
+  l52wdt: string
+  ms: string
+  its: boolean
+  dd: string
+  mw: string
+  tms: number
+  atp24h: number
+  atv24h: number
+  st: string
 }

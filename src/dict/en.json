@@ -1,4 +1,6 @@
 {
+  "sell": "Sell",
+  "buy": "Buy",
   "products": {
     "cart": "Add to Cart"
   }

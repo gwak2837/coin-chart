@@ -1,15 +1,18 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import toast from 'react-hot-toast'
 
-import { type WebSocketResponse } from '@/types/upbit'
+import { type UpbitSocketResponse } from '@/types/upbit'
+import { getSocketErrorReason } from '@/utils/socket'
 
 interface Props {
   coinCode: string
+  className?: string
 }
 
-export default function Chart({ coinCode }: Props) {
-  const [ticker, setTicker] = useState<WebSocketResponse>()
+export default function Chart({ coinCode, className }: Props) {
+  const [ticker, setTicker] = useState<UpbitSocketResponse>()
   const webSocketRef = useRef<WebSocket>()
 
   useEffect(() => {
@@ -21,7 +24,7 @@ export default function Chart({ coinCode }: Props) {
         JSON.stringify([
           { ticket: '667e0e63-9ac6-4538-935d-ebec368b52f3' },
           { type: 'ticker', codes: [coinCode] },
-          { format: 'DEFAULT' },
+          { format: 'SIMPLE' },
         ]),
       )
     }
@@ -29,12 +32,16 @@ export default function Chart({ coinCode }: Props) {
       if (event.data instanceof Blob) {
         const reader = new FileReader()
         reader.onload = () => {
-          setTicker(JSON.parse(reader.result as string) as WebSocketResponse)
+          const ticket = JSON.parse(reader.result as string) as UpbitSocketResponse
+          setTicker(ticket)
         }
         reader.readAsText(event.data)
       } else {
-        setTicker(JSON.parse(event.data as string) as WebSocketResponse)
+        setTicker(JSON.parse(event.data as string) as UpbitSocketResponse)
       }
+    }
+    webSocketRef.current.onclose = (event: CloseEvent) => {
+      toast.error(`WebSocket closed: ${getSocketErrorReason(event.code, event.reason)}`)
     }
 
     return () => {
@@ -43,8 +50,8 @@ export default function Chart({ coinCode }: Props) {
   }, [coinCode])
 
   return (
-    <>
-      <pre>{JSON.stringify(ticker, null, 2)}</pre>
-    </>
+    <div className={className}>
+      <pre className="overflow-hidden">{JSON.stringify(ticker, null, 2)}</pre>
+    </div>
   )
 }

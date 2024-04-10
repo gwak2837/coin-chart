@@ -8,6 +8,6 @@ const dictionaries = {
   en: async () => await import('./en.json').then((module) => module.default),
 }
 
-export async function getDict(locale: Locale) {
+export async function getTranslation(locale: Locale) {
   return await dictionaries[locale]()
 }
