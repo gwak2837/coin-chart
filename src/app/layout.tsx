@@ -50,11 +50,6 @@ export const metadata: Metadata = {
   referrer: 'strict-origin-when-cross-origin',
   robots: { index: true, follow: true },
   alternates: { canonical: CANONICAL_URL },
-  icons: {
-    icon: '/icon.png',
-    apple: '/apple-icon.png',
-    shortcut: '/shortcut-icon.png',
-  },
   manifest: '/manifest.webmanifest',
   openGraph: {
     title: APPLICATION_NAME,
@@ -62,7 +57,6 @@ export const metadata: Metadata = {
     type: 'website',
     url: CANONICAL_URL,
     siteName: APPLICATION_NAME,
-    locale: 'ko_KR',
     images: [{ url: '/images/og-image.webp', alt: `${APPLICATION_SHORT_NAME} 로고` }],
   },
   twitter: {
