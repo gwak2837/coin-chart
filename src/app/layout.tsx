@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import Script from 'next/script'
 
+import ReactQuery from '@/app/ReactQuery'
 import {
   CANONICAL_URL,
   APPLICATION_NAME,
@@ -99,11 +100,13 @@ export default function RootLayout({ children, params }: Readonly<LayoutProps>) 
       <meta content="IE=edge" httpEquiv="X-UA-Compatible" />
       <meta content="ca-pub-9227501485692453" name="google-adsense-account" />
       <body className={myFont.className}>
-        {children}
-        <div id="modal-root" />
-        <ReactHotToast />
-        <SpeedInsights />
+        <ReactQuery>
+          {children}
+          <div id="modal-root" />
+          <ReactHotToast />
+        </ReactQuery>
       </body>
+      <SpeedInsights />
       <Analytics />
       <GoogleAnalytics />
       <Script

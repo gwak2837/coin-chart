@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import toast from 'react-hot-toast'
 
-import { type UpbitSocketResponse } from '@/types/upbit'
+import Candle from '@/app/[locale]/coin/[code]/Candle'
+import { type UpbitSocketSimpleResponse } from '@/types/upbit'
 import { getSocketErrorReason } from '@/utils/socket'
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 }
 
 export default function Chart({ coinCode, className }: Props) {
-  const [ticker, setTicker] = useState<UpbitSocketResponse>()
+  const [ticker, setTicker] = useState<UpbitSocketSimpleResponse>()
   const webSocketRef = useRef<WebSocket>()
 
   useEffect(() => {
@@ -32,12 +33,12 @@ export default function Chart({ coinCode, className }: Props) {
       if (event.data instanceof Blob) {
         const reader = new FileReader()
         reader.onload = () => {
-          const ticket = JSON.parse(reader.result as string) as UpbitSocketResponse
+          const ticket = JSON.parse(reader.result as string) as UpbitSocketSimpleResponse
           setTicker(ticket)
         }
         reader.readAsText(event.data)
       } else {
-        setTicker(JSON.parse(event.data as string) as UpbitSocketResponse)
+        setTicker(JSON.parse(event.data as string) as UpbitSocketSimpleResponse)
       }
     }
     webSocketRef.current.onclose = (event: CloseEvent) => {
@@ -49,8 +50,16 @@ export default function Chart({ coinCode, className }: Props) {
     }
   }, [coinCode])
 
+  const 시가 = ticker?.op ?? 0
+  const 고가 = ticker?.hp ?? 0
+  const 저가 = ticker?.lp ?? 0
+  const 현재가 = ticker?.tp ?? 0
+
   return (
     <div className={className}>
+      <div className="flex gap-2">
+        <Candle className="h-40 w-20" fill 고가={고가} 시가={시가} 저가={저가} 종가={현재가} />
+      </div>
       <pre className="overflow-hidden">{JSON.stringify(ticker, null, 2)}</pre>
     </div>
   )
