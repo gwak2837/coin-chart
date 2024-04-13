@@ -3,16 +3,17 @@
 import { useEffect, useState, useRef } from 'react'
 import toast from 'react-hot-toast'
 
-import Candle from '@/app/[locale]/coin/[code]/Candle'
-import { type UpbitSocketSimpleResponse } from '@/types/upbit'
+import Candle, { CandleSkeleton } from '@/app/[locale]/market/[code]/Candle'
+import { type CoinCandle, type UpbitSocketSimpleResponse } from '@/types/upbit'
 import { getSocketErrorReason } from '@/utils/socket'
 
 interface Props {
   coinCode: string
   className?: string
+  candles: CoinCandle[]
 }
 
-export default function Chart({ coinCode, className }: Props) {
+export default function Chart({ candles, coinCode, className }: Props) {
   const [ticker, setTicker] = useState<UpbitSocketSimpleResponse>()
   const webSocketRef = useRef<WebSocket>()
 
@@ -42,6 +43,7 @@ export default function Chart({ coinCode, className }: Props) {
       }
     }
     webSocketRef.current.onclose = (event: CloseEvent) => {
+      if (event.code === 1000 || event.code === 1006) return
       toast.error(`WebSocket closed: ${getSocketErrorReason(event.code, event.reason)}`)
     }
 
@@ -50,15 +52,38 @@ export default function Chart({ coinCode, className }: Props) {
     }
   }, [coinCode])
 
-  const 시가 = ticker?.op ?? 0
-  const 고가 = ticker?.hp ?? 0
-  const 저가 = ticker?.lp ?? 0
-  const 현재가 = ticker?.tp ?? 0
+  const 시가 = ticker?.op
+  const 고가 = ticker?.hp
+  const 저가 = ticker?.lp
+  const 현재가 = ticker?.tp
+  const isTicker = 시가 && 고가 && 저가 && 현재가
 
   return (
     <div className={className}>
-      <div className="flex gap-2">
-        <Candle className="h-40 w-20" fill 고가={고가} 시가={시가} 저가={저가} 종가={현재가} />
+      <div className="flex gap-2 overflow-x-auto">
+        {candles.map((candle) => (
+          <Candle
+            key={candle.timestamp}
+            className="h-40 w-20 flex-shrink-0"
+            fill
+            고가={candle.high_price}
+            시가={candle.opening_price}
+            저가={candle.low_price}
+            종가={candle.trade_price}
+          />
+        ))}
+        {isTicker ? (
+          <Candle
+            className="h-40 w-20 flex-shrink-0"
+            fill
+            고가={고가}
+            시가={시가}
+            저가={저가}
+            종가={현재가}
+          />
+        ) : (
+          <CandleSkeleton className="h-40 w-20 flex-shrink-0" />
+        )}
       </div>
       <pre className="overflow-hidden">{JSON.stringify(ticker, null, 2)}</pre>
     </div>

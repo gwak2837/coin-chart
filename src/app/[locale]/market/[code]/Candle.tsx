@@ -15,7 +15,7 @@ export default memo(Candle)
 
 function Candle({ 시가, 고가, 저가, 종가, fill, className = '' }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const minimumRatio = 2 / (ref.current?.clientHeight ?? 1)
+  const minimumRatio = 2 / (ref.current?.clientHeight ?? 1000)
   const candleTop = Math.max(시가, 종가)
   const candleBottom = Math.min(시가, 종가)
   const candleHeight = Math.abs(시가 - 종가)
@@ -39,6 +39,21 @@ function Candle({ 시가, 고가, 저가, 종가, fill, className = '' }: Props)
         className={`absolute inset-0 z-10 box-border ${candleBGColor}`}
         style={{ transform: `translateY(${candleTranslateY}) scaleY(${candleScaleY})` }}
       />
+    </div>
+  )
+}
+
+interface SkeletonProps {
+  className?: string
+}
+
+export function CandleSkeleton({ className = '' }: SkeletonProps) {
+  const wrapperClassName = `relative grid grid-cols-2 ${className}`
+  return (
+    <div className={wrapperClassName}>
+      <div className="animate-pulse border-r" />
+      <div className="animate-pulse border-l" />
+      <div className="absolute inset-0 z-10 box-border scale-y-50 animate-pulse bg-slate-200" />
     </div>
   )
 }
