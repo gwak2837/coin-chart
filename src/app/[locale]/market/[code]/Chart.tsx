@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, type PointerEvent } from 'react'
 import toast from 'react-hot-toast'
 
 import Candle, { CandleSkeleton } from '@/app/[locale]/market/[code]/Candle'
@@ -13,9 +13,15 @@ interface Props {
   candles: CoinCandle[]
 }
 
-export default function Chart({ candles, coinCode, className }: Props) {
-  const [ticker, setTicker] = useState<UpbitSocketSimpleResponse>()
+export default function Chart({ candles, coinCode, className = '' }: Props) {
   const webSocketRef = useRef<WebSocket>()
+  const [ticker, setTicker] = useState<UpbitSocketSimpleResponse>()
+
+  const 시가 = ticker?.op
+  const 고가 = ticker?.hp
+  const 저가 = ticker?.lp
+  const 현재가 = ticker?.tp
+  const isTicker = 시가 && 고가 && 저가 && 현재가
 
   useEffect(() => {
     if (!coinCode) return
@@ -52,19 +58,76 @@ export default function Chart({ candles, coinCode, className }: Props) {
     }
   }, [coinCode])
 
-  const 시가 = ticker?.op
-  const 고가 = ticker?.hp
-  const 저가 = ticker?.lp
-  const 현재가 = ticker?.tp
-  const isTicker = 시가 && 고가 && 저가 && 현재가
+  // --
+  const containerRef = useRef<HTMLDivElement>(null)
+  const barRef = useRef<HTMLDivElement>(null)
+  const pointerMoveYLimitRef = useRef({ top: 0, bottom: 0 })
+  const pointerInfoRef = useRef({ startY: 0, isDragging: false, preY: 0 })
+  const [barTranslateY, setBarTranslateY] = useState(0)
+
+  useEffect(() => {
+    if (!barRef.current || !containerRef.current) return
+
+    pointerMoveYLimitRef.current = {
+      top:
+        containerRef.current.getBoundingClientRect().top -
+        barRef.current.getBoundingClientRect().top,
+      bottom:
+        containerRef.current.getBoundingClientRect().bottom -
+        barRef.current.getBoundingClientRect().bottom,
+    }
+  }, [])
+
+  function initPointerEvent(event: PointerEvent) {
+    const barRect = barRef.current?.getBoundingClientRect()
+    if (!barRect || event.clientY < barRect.top || event.clientY > barRect.bottom) return
+
+    pointerInfoRef.current.isDragging = true
+    pointerInfoRef.current.startY = event.clientY
+  }
+
+  function moveBar(event: PointerEvent) {
+    requestAnimationFrame(() => {
+      if (!pointerInfoRef.current.isDragging || !barRef.current) return
+
+      const pointerDragYOffset = event.clientY - pointerInfoRef.current.startY
+      const translateY = pointerInfoRef.current.preY + pointerDragYOffset
+      const max = Math.max(pointerMoveYLimitRef.current.top, translateY)
+      const nextTranslateY = Math.min(max, pointerMoveYLimitRef.current.bottom)
+      setBarTranslateY(nextTranslateY)
+    })
+  }
+
+  function cleanPointerEvent() {
+    pointerInfoRef.current.isDragging = false
+    pointerInfoRef.current.preY = +(barRef.current?.style.translate.slice(3, -2) ?? 0)
+  }
+
+  const chartRef = useRef<HTMLDivElement>(null)
+  const x = 0
+  const chartHeight = chartRef.current?.clientHeight ?? 1
+  const scaleY = (chartHeight + 2 * x) / chartHeight
+  const translateY = (x / chartHeight) * 100 + '%'
 
   return (
-    <div className={className}>
-      <div className="flex gap-2 overflow-x-auto">
+    <div
+      ref={containerRef}
+      className={`grid touch-none grid-rows-[1fr_auto_1fr] ${className}`}
+      onPointerCancel={cleanPointerEvent}
+      onPointerDown={initPointerEvent}
+      onPointerLeave={cleanPointerEvent}
+      onPointerMove={moveBar}
+      onPointerUp={cleanPointerEvent}
+    >
+      <div
+        ref={chartRef}
+        className="no-scrollbar flex gap-2 overflow-x-auto"
+        style={{ scale: `1 ${scaleY}`, translate: `0 ${translateY}` }}
+      >
         {candles.map((candle) => (
           <Candle
             key={candle.timestamp}
-            className="h-40 w-20 flex-shrink-0"
+            className="h-full w-20 flex-shrink-0"
             fill
             고가={candle.high_price}
             시가={candle.opening_price}
@@ -74,7 +137,7 @@ export default function Chart({ candles, coinCode, className }: Props) {
         ))}
         {isTicker ? (
           <Candle
-            className="h-40 w-20 flex-shrink-0"
+            className="h-full w-20 flex-shrink-0"
             fill
             고가={고가}
             시가={시가}
@@ -82,10 +145,39 @@ export default function Chart({ candles, coinCode, className }: Props) {
             종가={현재가}
           />
         ) : (
-          <CandleSkeleton className="h-40 w-20 flex-shrink-0" />
+          <CandleSkeleton className="w-20 flex-shrink-0" />
         )}
       </div>
-      <pre className="overflow-hidden">{JSON.stringify(ticker, null, 2)}</pre>
+      <div
+        ref={barRef}
+        className="relative z-20 h-3 cursor-row-resize bg-slate-300"
+        style={{ translate: `0 ${barTranslateY}px` }}
+      />
+      <div className="no-scrollbar flex gap-2 overflow-x-auto">
+        {candles.map((candle) => (
+          <Candle
+            key={candle.timestamp}
+            className="w-20 flex-shrink-0"
+            fill
+            고가={candle.high_price}
+            시가={candle.opening_price}
+            저가={candle.low_price}
+            종가={candle.trade_price}
+          />
+        ))}
+        {isTicker ? (
+          <Candle
+            className="w-20 flex-shrink-0"
+            fill
+            고가={고가}
+            시가={시가}
+            저가={저가}
+            종가={현재가}
+          />
+        ) : (
+          <CandleSkeleton className="w-20 flex-shrink-0" />
+        )}
+      </div>
     </div>
   )
 }
