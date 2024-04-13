@@ -105,8 +105,8 @@ export default function RootLayout({ children, params }: Readonly<LayoutProps>) 
           <div id="modal-root" />
           <ReactHotToast />
         </ReactQuery>
+        <SpeedInsights />
       </body>
-      <SpeedInsights />
       <Analytics />
       <GoogleAnalytics />
       <Script
