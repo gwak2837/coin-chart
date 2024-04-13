@@ -114,10 +114,14 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
   const scaleY2 = (chart2Height - barTranslateY) / chart2Height
   const translateY2 = (barTranslateY / chart2Height) * 50 + '%'
 
+  // --
+  const [chartScaleX, setChartScaleX] = useState(0.1)
+  const [chartScaleX2, setChartScaleX2] = useState(1)
+
   return (
     <div
       ref={containerRef}
-      className={`grid touch-none grid-rows-[1fr_auto_1fr] ${className}`}
+      className={`grid touch-none grid-rows-[4fr_auto_1fr] ${className}`}
       onPointerCancel={cleanPointerEvent}
       onPointerDown={initPointerEvent}
       onPointerLeave={cleanPointerEvent}
@@ -126,67 +130,80 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
     >
       <div
         ref={chartRef}
-        className="no-scrollbar flex gap-2 overflow-x-auto"
+        className="no-scrollbar overflow-x-auto"
         style={{ scale: `1 ${scaleY}`, translate: `0 ${translateY}` }}
+        onWheel={(event) => {
+          console.log('👀 - event:', event.deltaY)
+        }}
       >
-        {candles.map((candle) => (
-          <Candle
-            key={candle.timestamp}
-            className="h-full w-20 flex-shrink-0"
-            fill
-            고가={candle.high_price}
-            시가={candle.opening_price}
-            저가={candle.low_price}
-            종가={candle.trade_price}
-          />
-        ))}
-        {isTicker ? (
-          <Candle
-            className="h-full w-20 flex-shrink-0"
-            fill
-            고가={고가}
-            시가={시가}
-            저가={저가}
-            종가={현재가}
-          />
-        ) : (
-          <CandleSkeleton className="w-20 flex-shrink-0" />
-        )}
+        <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX} 1` }}>
+          {candles.map((candle) => (
+            <Candle
+              key={candle.timestamp}
+              chartScaleX={chartScaleX}
+              className="h-full w-1/2 flex-shrink-0"
+              fill
+              고가={candle.high_price}
+              시가={candle.opening_price}
+              저가={candle.low_price}
+              종가={candle.trade_price}
+            />
+          ))}
+          {isTicker ? (
+            <Candle
+              chartScaleX={chartScaleX}
+              className="h-full w-1/2 flex-shrink-0"
+              fill
+              고가={고가}
+              시가={시가}
+              저가={저가}
+              종가={현재가}
+            />
+          ) : (
+            <CandleSkeleton className="w-1/2 flex-shrink-0" />
+          )}
+        </div>
       </div>
       <div
         ref={barRef}
-        className="relative z-20 h-3 cursor-row-resize bg-slate-300"
+        className="relative z-20 h-3 cursor-row-resize bg-gray-300 dark:bg-gray-700"
         style={{ translate: `0 ${barTranslateY}px` }}
       />
       <div
         ref={chart2Ref}
-        className="no-scrollbar flex gap-2 overflow-x-auto"
+        className="no-scrollbar overflow-x-auto"
         style={{ scale: `1 ${scaleY2}`, translate: `0 ${translateY2}` }}
-        // style={{ scale: `1 0.5`, translate: `0 25%` }}
+        onWheel={(event) => {
+          console.log('👀 - event:', event.deltaY)
+        }}
       >
-        {candles.map((candle) => (
-          <Candle
-            key={candle.timestamp}
-            className="w-20 flex-shrink-0"
-            fill
-            고가={candle.high_price}
-            시가={candle.opening_price}
-            저가={candle.low_price}
-            종가={candle.trade_price}
-          />
-        ))}
-        {isTicker ? (
-          <Candle
-            className="w-20 flex-shrink-0"
-            fill
-            고가={고가}
-            시가={시가}
-            저가={저가}
-            종가={현재가}
-          />
-        ) : (
-          <CandleSkeleton className="w-20 flex-shrink-0" />
-        )}
+        <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX2} 1` }}>
+          {candles.map((candle) => (
+            <Candle
+              key={candle.timestamp}
+              chartScaleX={chartScaleX2}
+              className="h-full w-1/2 flex-shrink-0"
+              fill
+              고가={candle.high_price}
+              시가={candle.opening_price}
+              저가={candle.low_price}
+              종가={candle.trade_price}
+            />
+          ))}
+          {isTicker ? (
+            <Candle
+              chartScaleX={chartScaleX2}
+              className="h-full w-1/2 flex-shrink-0"
+              fill
+              고가={고가}
+              시가={시가}
+              저가={저가}
+              종가={현재가}
+            />
+          ) : (
+            <CandleSkeleton className="w-1/2 flex-shrink-0" />
+          )}
+        </div>
       </div>
     </div>
   )
