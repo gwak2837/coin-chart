@@ -103,11 +103,16 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
     pointerInfoRef.current.preY = +(barRef.current?.style.translate.slice(3, -2) ?? 0)
   }
 
+  // --
   const chartRef = useRef<HTMLDivElement>(null)
-  const x = 0
   const chartHeight = chartRef.current?.clientHeight ?? 1
-  const scaleY = (chartHeight + 2 * x) / chartHeight
-  const translateY = (x / chartHeight) * 100 + '%'
+  const scaleY = (chartHeight + barTranslateY) / chartHeight
+  const translateY = (barTranslateY / (2 * chartHeight)) * 100 + '%'
+
+  const chart2Ref = useRef<HTMLDivElement>(null)
+  const chart2Height = chart2Ref.current?.clientHeight ?? 1
+  const scaleY2 = (chart2Height - barTranslateY) / chart2Height
+  const translateY2 = (barTranslateY / chart2Height) * 50 + '%'
 
   return (
     <div
@@ -153,7 +158,12 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
         className="relative z-20 h-3 cursor-row-resize bg-slate-300"
         style={{ translate: `0 ${barTranslateY}px` }}
       />
-      <div className="no-scrollbar flex gap-2 overflow-x-auto">
+      <div
+        ref={chart2Ref}
+        className="no-scrollbar flex gap-2 overflow-x-auto"
+        style={{ scale: `1 ${scaleY2}`, translate: `0 ${translateY2}` }}
+        // style={{ scale: `1 0.5`, translate: `0 25%` }}
+      >
         {candles.map((candle) => (
           <Candle
             key={candle.timestamp}
