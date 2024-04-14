@@ -15,9 +15,9 @@ import {
   CATEGORY,
   THEME_COLOR,
 } from '@/common/constants'
-import { type LayoutProps } from '@/common/types'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import ReactHotToast from '@/components/ReactHotToast'
+import { type LayoutProps } from '@/types/next'
 
 import './globals.css'
 

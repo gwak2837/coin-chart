@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { type PageProps } from '@/common/types'
+import { type PageProps } from '@/types/next'
 import { type MarketCode } from '@/types/upbit'
 
 async function getMarketCodes() {

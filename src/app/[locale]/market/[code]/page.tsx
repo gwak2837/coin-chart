@@ -1,6 +1,6 @@
 import Chart from '@/app/[locale]/market/[code]/Chart'
-import { type PageProps } from '@/common/types'
 import { getTranslation } from '@/dict'
+import { type PageProps } from '@/types/next'
 import { type CoinCandle } from '@/types/upbit'
 
 const DEFAULT_CANDLE_TYPE = 'minutes'
@@ -35,7 +35,7 @@ export default async function Page({ params, searchParams }: PageProps<Params>) 
   const coinCode = params.code
   return (
     <main className="mx-auto flex min-h-dvh max-w-screen-2xl flex-col">
-      <Chart candles={candles} className="flex-grow" coinCode={coinCode} />
+      <Chart candles={candles.reverse()} className="flex-grow" coinCode={coinCode} />
       <div className="sticky bottom-0 grid grid-cols-2 gap-4 border-t p-4 pb-8 dark:border-gray-700">
         <button className="rounded-lg bg-rose-500 px-4 py-2 font-medium text-white">{t.buy}</button>
         <button className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white">

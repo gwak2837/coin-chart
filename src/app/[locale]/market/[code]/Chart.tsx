@@ -24,7 +24,6 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
   const 저가 = ticker?.lp
   const 현재가 = ticker?.tp
   const isTicker = 시가 && 고가 && 저가 && 현재가
-  console.log('👀 - isTicker:', isTicker)
 
   useEffect(() => {
     if (!coinCode) return
@@ -112,10 +111,9 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
   const scaleY = (chartHeight + barTranslateY) / chartHeight
   const translateY = (barTranslateY / (2 * chartHeight)) * 100 + '%'
   const [chartScaleX, setChartScaleX] = useState(0.01)
-  const lastCandle = candles[candles.length - 1]
   const [chartMinMax, setChartMinMax] = useState({
-    min: [lastCandle.low_price],
-    max: [lastCandle.high_price],
+    min: [Infinity],
+    max: [0],
   })
   const chartMax = Math.max(...chartMinMax.max)
   const chartMin = Math.min(...chartMinMax.min)
@@ -131,22 +129,13 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
   function scaleChart(event: WheelEvent) {
     if (event.deltaX !== 0 || event.deltaY === 0) return
     requestAnimationFrame(() => {
-      setChartScaleX((prev) => getMinMax(0.01, prev - getMinMax(-10, event.deltaY, 10) / 1000, 1))
+      setChartScaleX((prev) =>
+        getMinMax(0.01, prev - (prev * prev * getMinMax(-2, event.deltaY, 2)) / 10, 1),
+      )
     })
   }
 
-  const chart2Ref = useRef<HTMLDivElement>(null)
-  const chart2Height = chart2Ref.current?.clientHeight ?? 1
-  const scaleY2 = (chart2Height - barTranslateY) / chart2Height
-  const translateY2 = (barTranslateY / chart2Height) * 50 + '%'
   const [chartScaleX2, setChartScaleX2] = useState(1)
-
-  function scaleChart2(event: WheelEvent) {
-    if (event.deltaX !== 0 || event.deltaY === 0) return
-    setChartScaleX2((prev) => getMinMax(0.01, prev - event.deltaY / 5000, 1))
-  }
-
-  const candleAscending = [...candles].reverse()
 
   return (
     <div
@@ -160,7 +149,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
     >
       <div
         ref={chartRef}
-        className="no-scrollbar overflow-x-auto"
+        className="no-scrollbar overflow-x-auto overflow-y-hidden"
         style={{ scale: `1 ${scaleY}`, translate: `0 ${translateY}` }}
         onWheel={scaleChart}
       >
@@ -168,7 +157,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
           className="flex h-full gap-[10%] transition-transform"
           style={{ scale: `${chartScaleX} 1` }}
         >
-          {candleAscending.map((candle, i) => {
+          {candles.map((candle, i) => {
             const commonProps = {
               chartScaleX,
               chart고가: chartMax,
@@ -180,7 +169,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
               저가: candle.low_price,
               onIntersect: updateChartMinMax,
             }
-            return i < candleAscending.length ? (
+            return i < candles.length ? (
               <Candle key={candle.timestamp} {...commonProps} 종가={candle.trade_price} />
             ) : 현재가 ? (
               <Candle key={candle.timestamp} {...commonProps} 종가={현재가} />
@@ -206,12 +195,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
         className="relative z-20 col-span-2 h-3 cursor-row-resize bg-gray-300 dark:bg-gray-700"
         style={{ translate: `0 ${barTranslateY}px` }}
       />
-      <div
-        ref={chart2Ref}
-        className="no-scrollbar overflow-x-auto"
-        style={{ scale: `1 ${scaleY2}`, translate: `0 ${translateY2}` }}
-        onWheel={scaleChart2}
-      >
+      <div className="no-scrollbar overflow-x-auto">
         <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX2} 1` }}></div>
       </div>
       <div></div>

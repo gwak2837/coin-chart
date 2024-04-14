@@ -6,7 +6,7 @@ import {
   CANONICAL_URL,
   APPLICATION_SHORT_NAME,
 } from '@/common/constants'
-import { type LayoutProps } from '@/common/types'
+import { type LayoutProps } from '@/types/next'
 
 export function generateMetadata({ params }: LayoutProps): Metadata {
   return {
