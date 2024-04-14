@@ -24,6 +24,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
   const 저가 = ticker?.lp
   const 현재가 = ticker?.tp
   const isTicker = 시가 && 고가 && 저가 && 현재가
+  console.log('👀 - isTicker:', isTicker)
 
   useEffect(() => {
     if (!coinCode) return
@@ -90,7 +91,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
 
   function moveBar(event: PointerEvent) {
     requestAnimationFrame(() => {
-      if (!pointerInfoRef.current.isDragging || !barRef.current) return
+      if (!pointerInfoRef.current.isDragging) return
 
       const pointerDragYOffset = event.clientY - pointerInfoRef.current.startY
       const translateY = pointerInfoRef.current.preY + pointerDragYOffset
@@ -129,7 +130,9 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
 
   function scaleChart(event: WheelEvent) {
     if (event.deltaX !== 0 || event.deltaY === 0) return
-    setChartScaleX((prev) => getMinMax(0.01, prev - getMinMax(-5, event.deltaY, 5) / 5000, 1))
+    requestAnimationFrame(() => {
+      setChartScaleX((prev) => getMinMax(0.01, prev - getMinMax(-10, event.deltaY, 10) / 1000, 1))
+    })
   }
 
   const chart2Ref = useRef<HTMLDivElement>(null)
@@ -165,41 +168,26 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
           className="flex h-full gap-[10%] transition-transform"
           style={{ scale: `${chartScaleX} 1` }}
         >
-          {candleAscending.map((candle, i) =>
-            i === candleAscending.length - 1 ? (
-              현재가 ? (
-                <Candle
-                  key={candle.timestamp}
-                  chartScaleX={chartScaleX}
-                  chart고가={chartMax}
-                  chart저가={chartMin}
-                  className="h-full w-[45%] flex-shrink-0"
-                  fill
-                  고가={candle.high_price}
-                  시가={candle.opening_price}
-                  저가={candle.low_price}
-                  종가={현재가}
-                  onIntersect={updateChartMinMax}
-                />
-              ) : (
-                <CandleSkeleton className="w-[45%] flex-shrink-0" />
-              )
+          {candleAscending.map((candle, i) => {
+            const commonProps = {
+              chartScaleX,
+              chart고가: chartMax,
+              chart저가: chartMin,
+              className: 'h-full w-[45%] flex-shrink-0',
+              fill: true,
+              고가: candle.high_price,
+              시가: candle.opening_price,
+              저가: candle.low_price,
+              onIntersect: updateChartMinMax,
+            }
+            return i < candleAscending.length ? (
+              <Candle key={candle.timestamp} {...commonProps} 종가={candle.trade_price} />
+            ) : 현재가 ? (
+              <Candle key={candle.timestamp} {...commonProps} 종가={현재가} />
             ) : (
-              <Candle
-                key={candle.timestamp}
-                chartScaleX={chartScaleX}
-                chart고가={chartMax}
-                chart저가={chartMin}
-                className="h-full w-[45%] flex-shrink-0"
-                fill
-                고가={candle.high_price}
-                시가={candle.opening_price}
-                저가={candle.low_price}
-                종가={candle.trade_price}
-                onIntersect={updateChartMinMax}
-              />
-            ),
-          )}
+              <CandleSkeleton key={candle.timestamp} className="w-[45%] flex-shrink-0" />
+            )
+          })}
         </div>
       </div>
       <div
@@ -224,37 +212,9 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
         style={{ scale: `1 ${scaleY2}`, translate: `0 ${translateY2}` }}
         onWheel={scaleChart2}
       >
-        <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX2} 1` }}>
-          {candleAscending.map((candle) => (
-            <Candle
-              key={candle.timestamp}
-              chartScaleX={chartScaleX2}
-              className="h-full w-[45%] flex-shrink-0"
-              fill
-              고가={candle.high_price}
-              시가={candle.opening_price}
-              저가={candle.low_price}
-              종가={candle.trade_price}
-            />
-          ))}
-          {isTicker ? (
-            <Candle
-              chartScaleX={chartScaleX2}
-              className="h-full w-[45%] flex-shrink-0"
-              fill
-              고가={고가}
-              시가={시가}
-              저가={저가}
-              종가={현재가}
-            />
-          ) : (
-            <CandleSkeleton className="w-[45%] flex-shrink-0" />
-          )}
-        </div>
+        <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX2} 1` }}></div>
       </div>
       <div></div>
     </div>
   )
 }
-
-type ChartMinMax = { min: number[]; max: number[] }
