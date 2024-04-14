@@ -3,8 +3,9 @@
 import { useEffect, useState, useRef, type PointerEvent, type WheelEvent } from 'react'
 import toast from 'react-hot-toast'
 
-import Candle, { CandleSkeleton } from '@/app/[locale]/market/[code]/Candle'
+import Candle, { type Arguments, CandleSkeleton } from '@/app/[locale]/market/[code]/Candle'
 import { type CoinCandle, type UpbitSocketSimpleResponse } from '@/types/upbit'
+import { pushItem, removeOneItem } from '@/utils/js'
 import { getMinMax } from '@/utils/math'
 import { getSocketErrorReason } from '@/utils/socket'
 
@@ -109,11 +110,26 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
   const chartHeight = chartRef.current?.clientHeight ?? 1
   const scaleY = (chartHeight + barTranslateY) / chartHeight
   const translateY = (barTranslateY / (2 * chartHeight)) * 100 + '%'
-  const [chartScaleX, setChartScaleX] = useState(0.2)
+  const [chartScaleX, setChartScaleX] = useState(0.01)
+  const lastCandle = candles[candles.length - 1]
+  const [chartMinMax, setChartMinMax] = useState({
+    min: [lastCandle.low_price],
+    max: [lastCandle.high_price],
+  })
+  const chartMax = Math.max(...chartMinMax.max)
+  const chartMin = Math.min(...chartMinMax.min)
+
+  function updateChartMinMax({ 고가, 저가, isIntersecting }: Arguments) {
+    setChartMinMax((prev) =>
+      isIntersecting
+        ? { min: pushItem(prev.min, 저가), max: pushItem(prev.max, 고가) }
+        : { min: removeOneItem(prev.min, 저가), max: removeOneItem(prev.max, 고가) },
+    )
+  }
 
   function scaleChart(event: WheelEvent) {
     if (event.deltaX !== 0 || event.deltaY === 0) return
-    setChartScaleX((prev) => getMinMax(0.01, prev - event.deltaY / 2000, 1))
+    setChartScaleX((prev) => getMinMax(0.01, prev - getMinMax(-5, event.deltaY, 5) / 5000, 1))
   }
 
   const chart2Ref = useRef<HTMLDivElement>(null)
@@ -124,13 +140,15 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
 
   function scaleChart2(event: WheelEvent) {
     if (event.deltaX !== 0 || event.deltaY === 0) return
-    setChartScaleX2((prev) => getMinMax(0.01, prev - event.deltaY / 2000, 1))
+    setChartScaleX2((prev) => getMinMax(0.01, prev - event.deltaY / 5000, 1))
   }
+
+  const candleAscending = [...candles].reverse()
 
   return (
     <div
       ref={containerRef}
-      className={`grid touch-none grid-rows-[4fr_auto_1fr] ${className}`}
+      className={`grid touch-none grid-cols-[1fr_auto] grid-rows-[4fr_auto_1fr] ${className}`}
       onPointerCancel={cleanPointerEvent}
       onPointerDown={initPointerEvent}
       onPointerLeave={cleanPointerEvent}
@@ -147,36 +165,57 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
           className="flex h-full gap-[10%] transition-transform"
           style={{ scale: `${chartScaleX} 1` }}
         >
-          {candles.map((candle) => (
-            <Candle
-              key={candle.timestamp}
-              chartScaleX={chartScaleX}
-              className="h-full w-[45%] flex-shrink-0"
-              fill
-              고가={candle.high_price}
-              시가={candle.opening_price}
-              저가={candle.low_price}
-              종가={candle.trade_price}
-            />
-          ))}
-          {isTicker ? (
-            <Candle
-              chartScaleX={chartScaleX}
-              className="h-full w-[45%] flex-shrink-0"
-              fill
-              고가={고가}
-              시가={시가}
-              저가={저가}
-              종가={현재가}
-            />
-          ) : (
-            <CandleSkeleton className="w-[45%] flex-shrink-0" />
+          {candleAscending.map((candle, i) =>
+            i === candleAscending.length - 1 ? (
+              현재가 ? (
+                <Candle
+                  key={candle.timestamp}
+                  chartScaleX={chartScaleX}
+                  chart고가={chartMax}
+                  chart저가={chartMin}
+                  className="h-full w-[45%] flex-shrink-0"
+                  fill
+                  고가={candle.high_price}
+                  시가={candle.opening_price}
+                  저가={candle.low_price}
+                  종가={현재가}
+                  onIntersect={updateChartMinMax}
+                />
+              ) : (
+                <CandleSkeleton className="w-[45%] flex-shrink-0" />
+              )
+            ) : (
+              <Candle
+                key={candle.timestamp}
+                chartScaleX={chartScaleX}
+                chart고가={chartMax}
+                chart저가={chartMin}
+                className="h-full w-[45%] flex-shrink-0"
+                fill
+                고가={candle.high_price}
+                시가={candle.opening_price}
+                저가={candle.low_price}
+                종가={candle.trade_price}
+                onIntersect={updateChartMinMax}
+              />
+            ),
           )}
         </div>
       </div>
       <div
+        className="flex flex-col justify-between border-l p-1 dark:border-gray-700"
+        style={{ scale: `1 ${scaleY}`, translate: `0 ${translateY}` }}
+      >
+        <div style={{ scale: `1 ${1 / scaleY}` }}>{chartMax}</div>
+        <div style={{ scale: `1 ${1 / scaleY}` }}>
+          <div>현재가:</div>
+          <div>{현재가}</div>
+        </div>
+        <div style={{ scale: `1 ${1 / scaleY}` }}>{chartMin}</div>
+      </div>
+      <div
         ref={barRef}
-        className="relative z-20 h-3 cursor-row-resize bg-gray-300 dark:bg-gray-700"
+        className="relative z-20 col-span-2 h-3 cursor-row-resize bg-gray-300 dark:bg-gray-700"
         style={{ translate: `0 ${barTranslateY}px` }}
       />
       <div
@@ -186,7 +225,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
         onWheel={scaleChart2}
       >
         <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX2} 1` }}>
-          {candles.map((candle) => (
+          {candleAscending.map((candle) => (
             <Candle
               key={candle.timestamp}
               chartScaleX={chartScaleX2}
@@ -213,6 +252,9 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
           )}
         </div>
       </div>
+      <div></div>
     </div>
   )
 }
+
+type ChartMinMax = { min: number[]; max: number[] }
