@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef, type PointerEvent } from 'react'
+import { useEffect, useState, useRef, type PointerEvent, type WheelEvent } from 'react'
 import toast from 'react-hot-toast'
 
 import Candle, { CandleSkeleton } from '@/app/[locale]/market/[code]/Candle'
 import { type CoinCandle, type UpbitSocketSimpleResponse } from '@/types/upbit'
+import { getMinMax } from '@/utils/math'
 import { getSocketErrorReason } from '@/utils/socket'
 
 interface Props {
@@ -108,15 +109,23 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
   const chartHeight = chartRef.current?.clientHeight ?? 1
   const scaleY = (chartHeight + barTranslateY) / chartHeight
   const translateY = (barTranslateY / (2 * chartHeight)) * 100 + '%'
+  const [chartScaleX, setChartScaleX] = useState(0.2)
+
+  function scaleChart(event: WheelEvent) {
+    if (event.deltaX !== 0 || event.deltaY === 0) return
+    setChartScaleX((prev) => getMinMax(0.01, prev - event.deltaY / 2000, 1))
+  }
 
   const chart2Ref = useRef<HTMLDivElement>(null)
   const chart2Height = chart2Ref.current?.clientHeight ?? 1
   const scaleY2 = (chart2Height - barTranslateY) / chart2Height
   const translateY2 = (barTranslateY / chart2Height) * 50 + '%'
-
-  // --
-  const [chartScaleX, setChartScaleX] = useState(0.1)
   const [chartScaleX2, setChartScaleX2] = useState(1)
+
+  function scaleChart2(event: WheelEvent) {
+    if (event.deltaX !== 0 || event.deltaY === 0) return
+    setChartScaleX2((prev) => getMinMax(0.01, prev - event.deltaY / 2000, 1))
+  }
 
   return (
     <div
@@ -132,16 +141,17 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
         ref={chartRef}
         className="no-scrollbar overflow-x-auto"
         style={{ scale: `1 ${scaleY}`, translate: `0 ${translateY}` }}
-        onWheel={(event) => {
-          console.log('👀 - event:', event.deltaY)
-        }}
+        onWheel={scaleChart}
       >
-        <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX} 1` }}>
+        <div
+          className="flex h-full gap-[10%] transition-transform"
+          style={{ scale: `${chartScaleX} 1` }}
+        >
           {candles.map((candle) => (
             <Candle
               key={candle.timestamp}
               chartScaleX={chartScaleX}
-              className="h-full w-1/2 flex-shrink-0"
+              className="h-full w-[45%] flex-shrink-0"
               fill
               고가={candle.high_price}
               시가={candle.opening_price}
@@ -152,7 +162,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
           {isTicker ? (
             <Candle
               chartScaleX={chartScaleX}
-              className="h-full w-1/2 flex-shrink-0"
+              className="h-full w-[45%] flex-shrink-0"
               fill
               고가={고가}
               시가={시가}
@@ -160,7 +170,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
               종가={현재가}
             />
           ) : (
-            <CandleSkeleton className="w-1/2 flex-shrink-0" />
+            <CandleSkeleton className="w-[45%] flex-shrink-0" />
           )}
         </div>
       </div>
@@ -173,16 +183,14 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
         ref={chart2Ref}
         className="no-scrollbar overflow-x-auto"
         style={{ scale: `1 ${scaleY2}`, translate: `0 ${translateY2}` }}
-        onWheel={(event) => {
-          console.log('👀 - event:', event.deltaY)
-        }}
+        onWheel={scaleChart2}
       >
         <div className="flex h-full gap-[10%]" style={{ scale: `${chartScaleX2} 1` }}>
           {candles.map((candle) => (
             <Candle
               key={candle.timestamp}
               chartScaleX={chartScaleX2}
-              className="h-full w-1/2 flex-shrink-0"
+              className="h-full w-[45%] flex-shrink-0"
               fill
               고가={candle.high_price}
               시가={candle.opening_price}
@@ -193,7 +201,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
           {isTicker ? (
             <Candle
               chartScaleX={chartScaleX2}
-              className="h-full w-1/2 flex-shrink-0"
+              className="h-full w-[45%] flex-shrink-0"
               fill
               고가={고가}
               시가={시가}
@@ -201,7 +209,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
               종가={현재가}
             />
           ) : (
-            <CandleSkeleton className="w-1/2 flex-shrink-0" />
+            <CandleSkeleton className="w-[45%] flex-shrink-0" />
           )}
         </div>
       </div>
