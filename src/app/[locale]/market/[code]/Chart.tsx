@@ -169,7 +169,7 @@ export default function Chart({ candles, coinCode, className = '' }: Props) {
               저가: candle.low_price,
               onIntersect: updateChartMinMax,
             }
-            return i < candles.length ? (
+            return i < candles.length - 1 ? (
               <Candle key={candle.timestamp} {...commonProps} 종가={candle.trade_price} />
             ) : 현재가 ? (
               <Candle key={candle.timestamp} {...commonProps} 종가={현재가} />
